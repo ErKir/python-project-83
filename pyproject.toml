@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "hexlet-code"
+version = "0.1.0"
+description = "page analyzer"
+authors = ["ErKir <kirillerohin@gmail.com>"]
+readme = "README.md"
+packages = [{include = "page_analyzer"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[tool.poetry.scripts]
+page_analyzer = "page_analyzer.app:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
