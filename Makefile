@@ -23,7 +23,7 @@ start:
 MANAGE := poetry run python manage.py
 
 install:
-	@poetry install
+	pip install --upgrade poetry && poetry build && poetry install
 
 make-migration:
 	@$(MANAGE) makemigrations
