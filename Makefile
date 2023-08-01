@@ -20,15 +20,7 @@ PORT ?= 8000
 start:
 	poetry run gunicorn -w 5 -b 0.0.0.0:$(PORT) page_analyzer:app
 
-MANAGE := poetry run python manage.py
-
 install:
 	pip install --upgrade poetry && poetry build && poetry install
 
-make-migration:
-	@$(MANAGE) makemigrations
-
-migrate: make-migration
-	@$(MANAGE) migrate
-
-build: install migrate
+build: install
