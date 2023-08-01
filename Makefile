@@ -21,8 +21,6 @@ start:
 	poetry run gunicorn -w 5 -b 0.0.0.0:$(PORT) page_analyzer:app
 
 preinstal:
-	apt install python3-pip
-	pip --version
 	curl -sSL https://install.python-poetry.org | python3 -
 
 install: preinstal
