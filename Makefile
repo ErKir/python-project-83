@@ -22,6 +22,7 @@ start:
 
 preinstal:
 	python3 --version
+	pip --version
 	install python3
 	apt install python3-pip
 	curl -sSL https://install.python-poetry.org | python3 -
