@@ -23,4 +23,4 @@ start:
 install:
 	pip install --upgrade poetry && poetry build && poetry install
 
-build: install
+build: poetry install
