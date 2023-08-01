@@ -20,5 +20,11 @@ PORT ?= 8000
 start:
 	poetry run gunicorn -w 5 -b 0.0.0.0:$(PORT) page_analyzer:app
 
+preinstal:
+	install python3
+	apt install python3-pip
+	curl -sSL https://install.python-poetry.org | python3 -
+
 install:
+	preinstal
 	poetry install
