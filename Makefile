@@ -26,5 +26,9 @@ start:
 install:
 	poetry install
 
+prebuild:
+	pip install gunicorn
+	pip install Flask
+
 build:
-	pip install --upgrade pip && pip install poetry && pip install gunicorn && make install
+	pip install --upgrade pip && pip install poetry && make prebuild && make install
