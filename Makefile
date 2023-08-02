@@ -27,4 +27,4 @@ install:
 	poetry install
 
 build:
-	pip install --upgrade pip && pip install poetry && make install
+	pip install --upgrade pip && pip install poetry && pip install gunicorn && make install
