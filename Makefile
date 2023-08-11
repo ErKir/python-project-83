@@ -30,4 +30,4 @@ database:
 	psql -a -d $(DATABASE_URL) -f database.sql
 
 build:
-	install && database
+	install database
