@@ -28,6 +28,4 @@ DATABASE_URL ?= postgres://page_analyzer_sm2u_user:XbskxoQT7ZHCLu8BAL6qWrIwRT8DC
 database:
 	psql -a -d $(DATABASE_URL) -f database.sql
 
-build:
-	install
-	database
+build: install database
