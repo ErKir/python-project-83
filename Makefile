@@ -24,7 +24,7 @@ install:
 	pip install --upgrade pip && pip install poetry
 	poetry install
 
-DATABASE_URL ?= postgres://page_analyzer_sm2u_user:XbskxoQT7ZHCLu8BAL6qWrIwRT8DC6G8@dpg-cirdidtgkuvqadqogel0-a.oregon-postgres.render.com/page_analyzer_sm2u
+DATABASE_URL ?= postgres://kirill:esCiUzF9X4l73RaYn74wrnBoKDl5BMNs@dpg-cjb28k9itvpc73ddob4g-a/page_analyzer_tx40
 database:
 	psql -a -d $(DATABASE_URL) -f database.sql
 
