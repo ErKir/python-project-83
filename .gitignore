@@ -2,4 +2,4 @@
 .venv
 .vscode
 dist
-vars.txt
+env_vars.env

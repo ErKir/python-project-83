@@ -37,10 +37,8 @@ def url():
     errors = []
     data = request.form.to_dict()
     url_obj = urlparse(data['url'])
-    print('url obj  - ', url_obj.scheme, url_obj.netloc)
-    # найти как получать доступ к именованным членам
-    # кортежа (scheme='https', netloc='www.сайт.by', )
     cleaned_url = urlunsplit((url_obj.scheme, url_obj.netloc, '', '', '',))
+
     print('given url is  - ', cleaned_url)
     valid_url = validators.url(cleaned_url)
     valid_len_url = validators.length(cleaned_url, max=255)
@@ -52,19 +50,24 @@ def url():
                 'INSERT INTO urls (name, created_at) VALUES (%s, %s)',
                 (cleaned_url, date_time)
             )
-        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
+        with conn.cursor() as data:
             data.execute(
                 'SELECT id, name, created_at FROM urls WHERE name=%s',
                 (cleaned_url,)
             )
-            curr_url = data.fetchall()
-            print('curr_url==', curr_url)
-        return render_template(
-            'urls.html',
-            id=curr_url['id'],
-            name=curr_url['name'],
-            created_at=url['created_at']
-        )
+            curr_url = data.fetchall()[0]
+            id = curr_url[0]
+            # name = curr_url[1]
+            # created_at = curr_url[2].strftime("%Y-%m-%d")
+            # dic['id'] = id
+            # dic['name'] = name
+            # # 2023-08-07
+            # dic['created_at'] = created_at
+            # print('dic_url==', dic)
+            # flash('Страница успешно добавлена', 'success')
+        conn.close()
+        return make_response(redirect(url_for('get_curr_url', id=id)))
+
     errors = valid_url if valid_len_url is True else valid_len_url
     return render_template(
         'urls.html',
@@ -84,6 +87,33 @@ def urls_get():
         'urls.html',
         urls=urls,
         messages=messages,
+    )
+
+
+@app.route("/urls/<id>")
+def get_curr_url(id):
+    print('hi from urls get! looser! id=', id)
+
+    conn = psycopg2.connect(DATABASE_URL)
+    with conn.cursor() as data:
+        data.execute(
+            'SELECT * FROM urls'
+            # 'SELECT id, name, created_at FROM urls WHERE id=%s',
+            # (str(id),)
+        )
+        curr_url = data.fetchone()
+        print('curr_url==', curr_url)
+        dic = {}
+        name = curr_url[1]
+        created_at = curr_url[2].strftime("%Y-%m-%d")
+        dic['id'] = id
+        dic['name'] = name
+        dic['created_at'] = created_at
+    return render_template(
+        'urls_add.html',
+        id=dic['id'],
+        name=dic['name'],
+        created_at=dic['created_at']
     )
 
 

@@ -29,5 +29,3 @@ database:
 	psql -a -d $(DATABASE_URL) -f database.sql
 
 build: install database
-
-# PGPASSWORD=XbskxoQT7ZHCLu8BAL6qWrIwRT8DC6G8 psql -h dpg-cirdidtgkuvqadqogel0-a.oregon-postgres.render.com -U page_analyzer_sm2u_user page_analyzer_sm2u
