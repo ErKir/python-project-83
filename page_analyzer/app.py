@@ -74,7 +74,7 @@ def url():
         resp = make_response(redirect(url_for('get_curr_url', id=id)))
         resp.headers['X-ID'] = id
         return resp
-# нет флеша, нужно вроде бы делать рендер темплейт
+# нет флеш, с невалидным урл
     message['message'] = 'Некорректный URL'
     message['type'] = 'alert-danger'
     flash(message['message'], category=message['type'])
@@ -84,7 +84,7 @@ def url():
     )
 
 
-# выводит список сайтов на "/urls"
+# list urls to "/urls"
 @app.get('/urls')
 def urls_get():
 
@@ -127,8 +127,4 @@ def get_curr_url(id):
         created_at=dic['created_at']
     )
 
-
-# Страница успешно добавлена <div class="alert alert-success" role="alert">Страница успешно добавлена</div>
-# Страница уже существует <div class="alert alert-info" role="alert">Страница уже существует</div>
-# Некорректный URL   <div class="alert alert-danger" role="alert">Некорректный URL</div>
 # 2023-08-07
