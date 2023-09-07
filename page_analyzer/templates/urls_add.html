@@ -25,15 +25,16 @@
 
     </header>
 
-
-
-    <div class="alert alert-success" role="alert">Страница успешно добавлена</div>
-
+    {% if message %}
+    {% for category, text in message %}
+    <div class="alert {{ category }}" role="alert">{{ text }}</div>
+    {% endfor %}
+    {% endif %}
 
 
     <main class="flex-grow-1">
         <div class="container-lg mt-3">
-            <h1>Сайт: https://www.kufar.by</h1>
+            <h1>Сайт: {{ name }}</h1>
 
 
             <div class="table-responsive">
@@ -56,25 +57,25 @@
             </div>
 
             <h2 class="mt-5 mb-3">Проверки</h2>
-            <form method="post" action="/urls/2/checks">
+            <form method="post" action="/urls/{{ id }}/checks">
                 <input type="submit" class="btn btn-primary" value="Запустить проверку">
             </form>
 
             <div>
-<table class="table table-bordered table-hover text-nowrap" data-test="urls">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Имя</th>
-            <th>Последняя проверка</th>
-            <th>Код ответа</th>
-        </tr>
-    </thead>
-    <tbody>
+                <table class="table table-bordered table-hover text-nowrap" data-test="urls">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Имя</th>
+                            <th>Последняя проверка</th>
+                            <th>Код ответа</th>
+                        </tr>
+                    </thead>
+                    <tbody>
 
-        
-    </tbody>
-</table>
+
+                    </tbody>
+                </table>
             </div>
 
         </div>
