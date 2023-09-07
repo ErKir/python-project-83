@@ -1,5 +1,5 @@
 dev:
-	poetry run flask --app page_analyzer:app run
+	poetry run flask --app page_analyzer:app run --debug --port 8000
 
 lint:
 	poetry run flake8 page_analyzer
