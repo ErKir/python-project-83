@@ -97,6 +97,11 @@ def urls_get():
         data.execute('SELECT * FROM urls')
         answer = data.fetchall()
         urls = [dict(row) for row in answer]
+        # sort urls by 'id' in descending order
+        urls.sort(
+            reverse=True, key=lambda url: url.get('id')
+        )
+
     return render_template(
         'urls.html',
         urls=urls,
