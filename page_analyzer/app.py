@@ -19,6 +19,15 @@ import validators
 from urllib.parse import urlparse, urlunsplit
 import datetime
 
+
+def is_valid_url(url):
+    valid_url = validators.url(url)
+    valid_len_url = validators.length(url, max=255)
+    if (valid_len_url and valid_url):
+        return True
+    return False
+
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(12)
 
@@ -43,11 +52,7 @@ def url():
     data = request.form.to_dict()
     url_obj = urlparse(data['url'])
     cleaned_url = urlunsplit((url_obj.scheme, url_obj.netloc, '', '', '',))
-
-    valid_url = validators.url(cleaned_url)
-    valid_len_url = validators.length(cleaned_url, max=255)
-
-    if (valid_len_url and valid_url):
+    if is_valid_url(cleaned_url):
         conn = psycopg2.connect(DATABASE_URL)
         date_time = datetime.datetime.now().strftime("%Y-%m-%d")
         with conn.cursor() as db:
@@ -74,10 +79,7 @@ def url():
         resp = make_response(redirect(url_for('get_curr_url', id=id)))
         resp.headers['X-ID'] = id
         return resp
-# нет флеш, с невалидным урл
-    message['message'] = 'Некорректный URL'
-    message['type'] = 'alert-danger'
-    flash(message['message'], category=message['type'])
+    message = [('alert-danger', 'Некорректный URL')]
     return render_template(
         'urls.html',
         message=message,
@@ -105,7 +107,6 @@ def urls_get():
 @app.route("/urls/<id>")
 def get_curr_url(id):
     message = get_flashed_messages(with_categories=True)
-    print('messages from get_curr_url- ', message)
     conn = psycopg2.connect(DATABASE_URL)
     with conn.cursor() as data:
         data.execute(
@@ -113,18 +114,15 @@ def get_curr_url(id):
             (str(id),)
         )
         curr_url = data.fetchone()
-        dic = {}
         name = curr_url[1]
         created_at = curr_url[2]
-        dic['id'] = id
-        dic['name'] = name
-        dic['created_at'] = created_at
+
     return render_template(
         'urls_add.html',
         message=message,
-        id=dic['id'],
-        name=dic['name'],
-        created_at=dic['created_at']
+        id=id,
+        name=name,
+        created_at=created_at
     )
 
 # 2023-08-07
