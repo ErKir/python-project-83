@@ -17,7 +17,7 @@ import psycopg2.extras
 from dotenv import dotenv_values
 import validators
 from urllib.parse import urlparse, urlunsplit
-import datetime
+from datetime import datetime
 
 
 def is_valid_url(url):
@@ -44,7 +44,6 @@ DATABASE_URL = config['DATABASE_URL']
 # url add
 @app.post("/urls")
 def url():
-
     message = {
         'message': 'Страница успешно добавлена',
         'type': 'alert-success',
@@ -54,7 +53,7 @@ def url():
     cleaned_url = urlunsplit((url_obj.scheme, url_obj.netloc, '', '', '',))
     if is_valid_url(cleaned_url):
         conn = psycopg2.connect(DATABASE_URL)
-        date_time = datetime.datetime.now().strftime("%Y-%m-%d")
+        date_time = datetime.now().strftime("%Y-%m-%d")
         with conn.cursor() as db:
             try:
                 db.execute(
@@ -89,23 +88,22 @@ def url():
 # list urls to "/urls"
 @app.get('/urls')
 def urls_get():
-
     conn = psycopg2.connect(DATABASE_URL)
-    messages = get_flashed_messages(with_categories=True)
-    print('messages from urls GET- ', messages)
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
-        data.execute('SELECT * FROM urls')
+        query = 'SELECT DISTINCT urls.id AS urls_id, '\
+                'url_checks.created_at AS created_at, '\
+                'name FROM url_checks JOIN urls ON urls.id = url_checks.url_id'
+        data.execute(query)
         answer = data.fetchall()
         urls = [dict(row) for row in answer]
         # sort urls by 'id' in descending order
         urls.sort(
-            reverse=True, key=lambda url: url.get('id')
+            reverse=True, key=lambda url: url.get('urls_id')
         )
 
     return render_template(
         'urls.html',
         urls=urls,
-        messages=messages,
     )
 
 
@@ -122,12 +120,51 @@ def get_curr_url(id):
         name = curr_url[1]
         created_at = curr_url[2]
 
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
+        data.execute(
+            'SELECT id, url_id, created_at FROM url_checks WHERE url_id=%s',
+            (str(id),)
+        )
+        answer = data.fetchall()
+        url_checks = [dict(row) for row in answer]
+        # sort checks by 'id' in descending order
+        url_checks.sort(
+            reverse=True, key=lambda url: url.get('id')
+        )
     return render_template(
         'urls_add.html',
         message=message,
         id=id,
         name=name,
-        created_at=created_at
+        created_at=created_at,
+        url_checks=url_checks,
     )
 
+
+# make check
+@app.post("/urls/<id>/checks")
+def make_check(id):
+    message = {
+        'message': 'Страница успешно проверена',
+        'type': 'alert-success',
+    }
+    conn = psycopg2.connect(DATABASE_URL)
+    date_time = datetime.now().strftime("%Y-%m-%d")
+    print('date_time = ', date_time)
+    with conn.cursor() as db:
+        db.execute(
+            'INSERT INTO url_checks (url_id, created_at) VALUES (%s, %s)',
+            (str(id), date_time)
+        )
+        conn.commit()
+
+        flash(message['message'], category=message['type'])
+        resp = make_response(redirect(url_for('get_curr_url', id=id)))
+        resp.headers['X-ID'] = id
+        return resp
+
 # 2023-08-07
+#
+# <div class="alert alert-danger" role="alert">
+# Произошла ошибка при проверке</div>
+# <div class="alert alert-success" role="alert">Страница успешно проверена</div>
