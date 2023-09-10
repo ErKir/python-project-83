@@ -17,7 +17,7 @@ import psycopg2.extras
 from dotenv import dotenv_values
 import validators
 from urllib.parse import urlparse, urlunsplit
-import datetime
+from datetime import datetime
 
 
 def is_valid_url(url):
@@ -53,7 +53,7 @@ def url():
     cleaned_url = urlunsplit((url_obj.scheme, url_obj.netloc, '', '', '',))
     if is_valid_url(cleaned_url):
         conn = psycopg2.connect(DATABASE_URL)
-        date_time = datetime.datetime.now().strftime("%Y-%m-%d")
+        date_time = datetime.now().strftime("%Y-%m-%d")
         with conn.cursor() as db:
             try:
                 db.execute(
@@ -88,22 +88,22 @@ def url():
 # list urls to "/urls"
 @app.get('/urls')
 def urls_get():
-
     conn = psycopg2.connect(DATABASE_URL)
-    messages = get_flashed_messages(with_categories=True)
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
-        data.execute('SELECT * FROM urls')
+        query = 'SELECT DISTINCT urls.id AS urls_id, '\
+                'url_checks.created_at AS created_at, '\
+                'name FROM url_checks JOIN urls ON urls.id = url_checks.url_id'
+        data.execute(query)
         answer = data.fetchall()
         urls = [dict(row) for row in answer]
         # sort urls by 'id' in descending order
         urls.sort(
-            reverse=True, key=lambda url: url.get('id')
+            reverse=True, key=lambda url: url.get('urls_id')
         )
 
     return render_template(
         'urls.html',
         urls=urls,
-        messages=messages,
     )
 
 
@@ -122,7 +122,7 @@ def get_curr_url(id):
 
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
         data.execute(
-            'SELECT url_id, created_at FROM urls WHERE url_id=%s',
+            'SELECT id, url_id, created_at FROM url_checks WHERE url_id=%s',
             (str(id),)
         )
         answer = data.fetchall()
@@ -149,7 +149,7 @@ def make_check(id):
         'type': 'alert-success',
     }
     conn = psycopg2.connect(DATABASE_URL)
-    date_time = datetime.datetime.now().strftime("%Y-%m-%d")
+    date_time = datetime.now().strftime("%Y-%m-%d")
     print('date_time = ', date_time)
     with conn.cursor() as db:
         db.execute(
@@ -168,12 +168,3 @@ def make_check(id):
 # <div class="alert alert-danger" role="alert">
 # Произошла ошибка при проверке</div>
 # <div class="alert alert-success" role="alert">Страница успешно проверена</div>
-# CREATE TABLE url_checks (
-#     id          bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-#     url_id      bigint,
-#     status_code varchar(255),
-#     h1          varchar(255),
-#     title       varchar(255),
-#     description varchar(65535),
-#     created_at timestamp NOT NULL
-# );
