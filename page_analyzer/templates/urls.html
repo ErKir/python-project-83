@@ -59,16 +59,13 @@
                     <tbody>
                         {% for url in urls %}
                         <tr>
-                            <td>{{ url['id'] }}</td>
+                            <td>{{ url['urls_id'] }}</td>
                             <td>
-                                <a href="/urls/{{ url['id'] }}">
+                                <a href="/urls/{{ url['urls_id'] }}">
                                     {{ url['name'] }}
                                 </a>
                             </td>
-
-                            <td></td>
-
-
+                            <td>{{ url['created_at'] }}</td>
                             <td></td>
                             {% endfor %}
                         </tr>

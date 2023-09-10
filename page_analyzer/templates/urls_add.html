@@ -65,7 +65,6 @@
                 <table class="table table-bordered table-hover mt-2" data-test="checks">
                     <thead>
                         <tr>
-                            <!-- url_checks -->
                             <th>ID</th>
                             <th>Код ответа</th>
                             <th>h1</th>
@@ -77,7 +76,7 @@
                     <tbody>
                         {% for check in url_checks %}
                         <tr>
-                            <td>{{ check['url_id'] }}</td>
+                            <td>{{ check['id'] }}</td>
                             <td></td>
                             <td></td>                      
                             <td></td>
