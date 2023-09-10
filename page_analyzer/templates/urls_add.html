@@ -65,6 +65,7 @@
                 <table class="table table-bordered table-hover mt-2" data-test="checks">
                     <thead>
                         <tr>
+                            <!-- url_checks -->
                             <th>ID</th>
                             <th>Код ответа</th>
                             <th>h1</th>
@@ -74,7 +75,16 @@
                         </tr>
                     </thead>
                     <tbody>
-
+                        {% for check in url_checks %}
+                        <tr>
+                            <td>{{ check['url_id'] }}</td>
+                            <td></td>
+                            <td></td>                      
+                            <td></td>
+                            <td></td>
+                            <td>{{ check['created_at'] }}</td>
+                            {% endfor %}
+                        </tr>
                     </tbody>
                 </table>
             </div>
