@@ -11,7 +11,7 @@ from flask import (
     request,
     url_for,
 )
-
+import requests
 import psycopg2
 import psycopg2.extras
 from dotenv import dotenv_values
@@ -92,6 +92,7 @@ def urls_get():
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
         query = 'SELECT DISTINCT urls.id AS urls_id, '\
                 'url_checks.created_at AS created_at, '\
+                'url_checks.status_code AS status_code, '\
                 'name FROM url_checks JOIN urls ON urls.id = url_checks.url_id'
         data.execute(query)
         answer = data.fetchall()
@@ -122,7 +123,8 @@ def get_curr_url(id):
 
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
         data.execute(
-            'SELECT id, url_id, created_at FROM url_checks WHERE url_id=%s',
+            'SELECT id, url_id, created_at, status_code '
+            'FROM url_checks WHERE url_id=%s',
             (str(id),)
         )
         answer = data.fetchall()
@@ -149,12 +151,23 @@ def make_check(id):
         'type': 'alert-success',
     }
     conn = psycopg2.connect(DATABASE_URL)
+    with conn.cursor() as data:
+        data.execute(
+            'SELECT id, name, created_at FROM urls WHERE id=%s',
+            (str(id),)
+        )
+        curr_url = data.fetchone()
+        name = curr_url[1]
+    # get response
+    response = requests.get(name, verify=False)
+    print('response = ', type(response.status_code))
+
     date_time = datetime.now().strftime("%Y-%m-%d")
-    print('date_time = ', date_time)
     with conn.cursor() as db:
         db.execute(
-            'INSERT INTO url_checks (url_id, created_at) VALUES (%s, %s)',
-            (str(id), date_time)
+            'INSERT INTO url_checks'
+            '(url_id, created_at, status_code) VALUES (%s, %s, %s)',
+            (str(id), date_time, str(response.status_code))
         )
         conn.commit()
 
