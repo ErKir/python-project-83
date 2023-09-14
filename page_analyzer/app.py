@@ -11,7 +11,7 @@ from flask import (
     request,
     url_for,
 )
-
+import requests
 import psycopg2
 import psycopg2.extras
 from dotenv import dotenv_values
@@ -90,20 +90,30 @@ def url():
 def urls_get():
     conn = psycopg2.connect(DATABASE_URL)
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
-        query = 'SELECT DISTINCT urls.id AS urls_id, '\
-                'url_checks.created_at AS created_at, '\
-                'name FROM url_checks JOIN urls ON urls.id = url_checks.url_id'
+        query = '''
+        SELECT DISTINCT urls.id AS urls_id,
+            url_checks.created_at AS created_at,
+            url_checks.status_code AS status_code,
+            name FROM url_checks RIGHT JOIN urls ON urls.id = url_checks.url_id
+        '''
         data.execute(query)
         answer = data.fetchall()
         urls = [dict(row) for row in answer]
+
+        def without_null(dict):
+            for key in dict.keys():
+                dict[key] = '' if dict[key] is None else dict[key]
+            return dict
+        urls_without_null = list(map(without_null, urls))
         # sort urls by 'id' in descending order
-        urls.sort(
+
+        urls_without_null.sort(
             reverse=True, key=lambda url: url.get('urls_id')
         )
 
     return render_template(
         'urls.html',
-        urls=urls,
+        urls=urls_without_null,
     )
 
 
@@ -122,7 +132,8 @@ def get_curr_url(id):
 
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
         data.execute(
-            'SELECT id, url_id, created_at FROM url_checks WHERE url_id=%s',
+            'SELECT id, url_id, created_at, status_code '
+            'FROM url_checks WHERE url_id=%s',
             (str(id),)
         )
         answer = data.fetchall()
@@ -144,21 +155,39 @@ def get_curr_url(id):
 # make check
 @app.post("/urls/<id>/checks")
 def make_check(id):
-    message = {
-        'message': 'Страница успешно проверена',
-        'type': 'alert-success',
-    }
     conn = psycopg2.connect(DATABASE_URL)
+    with conn.cursor() as data:
+        data.execute(
+            'SELECT id, name, created_at FROM urls WHERE id=%s',
+            (str(id),)
+        )
+        curr_url = data.fetchone()
+        name = curr_url[1]
+    # get response
+    try:
+        response = requests.get(name, verify=False)
+    except requests.exceptions.RequestException:
+        flash('Произошла ошибка при проверке', category='alert-danger')
+        resp = make_response(redirect(url_for('get_curr_url', id=id)))
+        resp.headers['X-ID'] = id
+        return resp
+    success_status_codes = range(200, 300)
+    if response.status_code not in success_status_codes:
+        flash('Произошла ошибка при проверке', category='alert-danger')
+        resp = make_response(redirect(url_for('get_curr_url', id=id)))
+        resp.headers['X-ID'] = id
+        return resp
+
     date_time = datetime.now().strftime("%Y-%m-%d")
-    print('date_time = ', date_time)
     with conn.cursor() as db:
         db.execute(
-            'INSERT INTO url_checks (url_id, created_at) VALUES (%s, %s)',
-            (str(id), date_time)
+            'INSERT INTO url_checks'
+            '(url_id, created_at, status_code) VALUES (%s, %s, %s)',
+            (str(id), date_time, str(response.status_code))
         )
         conn.commit()
 
-        flash(message['message'], category=message['type'])
+        flash('Страница успешно проверена', category='alert-success')
         resp = make_response(redirect(url_for('get_curr_url', id=id)))
         resp.headers['X-ID'] = id
         return resp
