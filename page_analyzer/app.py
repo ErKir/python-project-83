@@ -18,6 +18,7 @@ from dotenv import dotenv_values
 import validators
 from urllib.parse import urlparse, urlunsplit
 from datetime import datetime
+from bs4 import BeautifulSoup
 
 
 def is_valid_url(url):
@@ -39,6 +40,12 @@ def index():
 
 config = dotenv_values("env_vars.env")
 DATABASE_URL = config['DATABASE_URL']
+
+
+def without_null(dict):
+    for key in dict.keys():
+        dict[key] = '' if dict[key] is None else dict[key]
+    return dict
 
 
 # url add
@@ -100,10 +107,6 @@ def urls_get():
         answer = data.fetchall()
         urls = [dict(row) for row in answer]
 
-        def without_null(dict):
-            for key in dict.keys():
-                dict[key] = '' if dict[key] is None else dict[key]
-            return dict
         urls_without_null = list(map(without_null, urls))
         # sort urls by 'id' in descending order
 
@@ -132,14 +135,15 @@ def get_curr_url(id):
 
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
         data.execute(
-            'SELECT id, url_id, created_at, status_code '
+            'SELECT id, url_id, created_at, status_code, h1, title, description '
             'FROM url_checks WHERE url_id=%s',
             (str(id),)
         )
         answer = data.fetchall()
         url_checks = [dict(row) for row in answer]
+        urls_without_null = list(map(without_null, url_checks))
         # sort checks by 'id' in descending order
-        url_checks.sort(
+        urls_without_null.sort(
             reverse=True, key=lambda url: url.get('id')
         )
     return render_template(
@@ -148,7 +152,7 @@ def get_curr_url(id):
         id=id,
         name=name,
         created_at=created_at,
-        url_checks=url_checks,
+        url_checks=urls_without_null,
     )
 
 
@@ -179,11 +183,18 @@ def make_check(id):
         return resp
 
     date_time = datetime.now().strftime("%Y-%m-%d")
+    soup = BeautifulSoup(response.text, 'html.parser')
+    h1 = soup.h1.string if soup.h1 else ''
+    title = soup.title.string if soup.title else ''
+    description = soup.find("meta", {"name": "description"})
+    content = description['content'] if description else ''
+    print('h1 = ', h1, 'title = ', title, 'desc = ', content)
+
     with conn.cursor() as db:
         db.execute(
             'INSERT INTO url_checks'
-            '(url_id, created_at, status_code) VALUES (%s, %s, %s)',
-            (str(id), date_time, str(response.status_code))
+            '(url_id, created_at, status_code, h1, title, description) VALUES (%s, %s, %s, %s, %s, %s)',
+            (str(id), date_time, str(response.status_code), h1, title, content)
         )
         conn.commit()
 
@@ -191,9 +202,3 @@ def make_check(id):
         resp = make_response(redirect(url_for('get_curr_url', id=id)))
         resp.headers['X-ID'] = id
         return resp
-
-# 2023-08-07
-#
-# <div class="alert alert-danger" role="alert">
-# Произошла ошибка при проверке</div>
-# <div class="alert alert-success" role="alert">Страница успешно проверена</div>
