@@ -135,7 +135,8 @@ def get_curr_url(id):
 
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
         data.execute(
-            'SELECT id, url_id, created_at, status_code, h1, title, description '
+            'SELECT '
+            'id, url_id, created_at, status_code, h1, title, description '
             'FROM url_checks WHERE url_id=%s',
             (str(id),)
         )
@@ -188,12 +189,12 @@ def make_check(id):
     title = soup.title.string if soup.title else ''
     description = soup.find("meta", {"name": "description"})
     content = description['content'] if description else ''
-    print('h1 = ', h1, 'title = ', title, 'desc = ', content)
 
     with conn.cursor() as db:
         db.execute(
             'INSERT INTO url_checks'
-            '(url_id, created_at, status_code, h1, title, description) VALUES (%s, %s, %s, %s, %s, %s)',
+            '(url_id, created_at, status_code, h1, title, description) VALUES '
+            '(%s, %s, %s, %s, %s, %s)',
             (str(id), date_time, str(response.status_code), h1, title, content)
         )
         conn.commit()
