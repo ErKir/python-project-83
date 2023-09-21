@@ -14,7 +14,7 @@ from flask import (
 import requests
 import psycopg2
 import psycopg2.extras
-from dotenv import dotenv_values
+from dotenv import load_dotenv
 import validators
 from urllib.parse import urlparse, urlunsplit
 from datetime import datetime
@@ -38,8 +38,8 @@ def index():
     return render_template('index.html')
 
 
-config = dotenv_values("env_vars.env")
-DATABASE_URL = config['DATABASE_URL']
+load_dotenv()
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 
 def without_null(dict):
