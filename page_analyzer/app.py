@@ -51,10 +51,7 @@ def without_null(dict):
 # url add
 @app.post("/urls")
 def url():
-    message = {
-        'message': 'Страница успешно добавлена',
-        'type': 'alert-success',
-    }
+    message = ('Страница успешно добавлена', 'success')
     data = request.form.to_dict()
     url_obj = urlparse(data['url'])
     cleaned_url = urlunsplit((url_obj.scheme, url_obj.netloc, '', '', '',))
@@ -69,8 +66,7 @@ def url():
                 )
                 conn.commit()
             except psycopg2.errors.UniqueViolation:
-                message['message'] = 'Страница уже существует'
-                message['type'] = 'alert-info'
+                message = ('Страница уже существует', 'info')
                 conn.rollback()
 
         with conn.cursor() as data:
@@ -81,15 +77,12 @@ def url():
             curr_url = data.fetchall()[0]
             id = curr_url[0]
         conn.close()
-        flash(message['message'], category=message['type'])
-        resp = make_response(redirect(url_for('get_curr_url', id=id)))
+        flash(*message)
+        resp = redirect(url_for('get_curr_url', id=id), code=302)
         resp.headers['X-ID'] = id
         return resp
-    message = [('alert-danger', 'Некорректный URL')]
-    return render_template(
-        'urls.html',
-        message=message,
-    )
+    flash('Некорректный URL', 'danger')
+    return render_template('urls.html'), 422
 
 
 # list urls to "/urls"
@@ -107,12 +100,7 @@ def urls_get():
         data.execute(query)
         answer = data.fetchall()
         urls = [dict(row) for row in answer]
-        print(urls)
         urls_without_none = list(map(without_null, urls))
-        # sort urls by 'id' in descending order
-        # urls_without_null.sort(
-        #     reverse=True, key=lambda url: url.get('urls_id')
-        # )
 
     return render_template(
         'urls.html',
@@ -172,13 +160,13 @@ def make_check(id):
     try:
         response = requests.get(name, verify=False)
     except requests.exceptions.RequestException:
-        flash('Произошла ошибка при проверке', category='alert-danger')
+        flash('Произошла ошибка при проверке', category='danger')
         resp = make_response(redirect(url_for('get_curr_url', id=id)))
         resp.headers['X-ID'] = id
         return resp
     success_status_codes = range(200, 300)
     if response.status_code not in success_status_codes:
-        flash('Произошла ошибка при проверке', category='alert-danger')
+        flash('Произошла ошибка при проверке', category='danger')
         resp = make_response(redirect(url_for('get_curr_url', id=id)))
         resp.headers['X-ID'] = id
         return resp
@@ -199,7 +187,7 @@ def make_check(id):
         )
         conn.commit()
 
-        flash('Страница успешно проверена', category='alert-success')
+        flash('Страница успешно проверена', category='success')
         resp = make_response(redirect(url_for('get_curr_url', id=id)))
         resp.headers['X-ID'] = id
         return resp
