@@ -50,7 +50,7 @@
                         </tr>
                         <tr>
                             <td>Дата создания</td>
-                            <td>{{ created_at }}</td>
+                            <td>{{ created_at.date() }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -81,7 +81,7 @@
                             <td>{{ check['h1'] }}</td>                      
                             <td>{{ check['title'] }}</td>
                             <td>{{ check['description'] }}</td>
-                            <td>{{ check['created_at'] }}</td>
+                            <td>{{ check['created_at'].date() }}</td>
                             {% endfor %}
                         </tr>
                     </tbody>

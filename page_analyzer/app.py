@@ -98,10 +98,11 @@ def urls_get():
     conn = psycopg2.connect(DATABASE_URL)
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
         query = '''
-        SELECT DISTINCT urls.id AS urls_id,
-            url_checks.created_at AS created_at,
-            url_checks.status_code AS status_code,
-            name FROM url_checks RIGHT JOIN urls ON urls.id = url_checks.url_id
+        SELECT urls.id, urls.name, MAX(url_checks.created_at) as last_check,
+               url_checks.status_code
+               FROM urls LEFT JOIN url_checks ON urls.id = url_checks.url_id
+               GROUP BY urls.id, url_checks.status_code
+               ORDER BY urls.created_at DESC
         '''
         data.execute(query)
         answer = data.fetchall()
@@ -109,7 +110,6 @@ def urls_get():
 
         urls_without_null = list(map(without_null, urls))
         # sort urls by 'id' in descending order
-
         urls_without_null.sort(
             reverse=True, key=lambda url: url.get('urls_id')
         )
