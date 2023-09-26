@@ -107,16 +107,16 @@ def urls_get():
         data.execute(query)
         answer = data.fetchall()
         urls = [dict(row) for row in answer]
-
-        urls_without_null = list(map(without_null, urls))
+        print(urls)
+        urls_without_none = list(map(without_null, urls))
         # sort urls by 'id' in descending order
-        urls_without_null.sort(
-            reverse=True, key=lambda url: url.get('urls_id')
-        )
+        # urls_without_null.sort(
+        #     reverse=True, key=lambda url: url.get('urls_id')
+        # )
 
     return render_template(
         'urls.html',
-        urls=urls_without_null,
+        urls=urls_without_none,
     )
 
 
