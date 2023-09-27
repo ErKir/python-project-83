@@ -4,7 +4,6 @@ import os
 from flask import (
     Flask,
     flash,
-    get_flashed_messages,
     make_response,
     redirect,
     render_template,
@@ -110,7 +109,6 @@ def urls_get():
 
 @app.route("/urls/<id>")
 def get_curr_url(id):
-    message = get_flashed_messages(with_categories=True)
     conn = psycopg2.connect(DATABASE_URL)
     with conn.cursor() as data:
         data.execute(
@@ -137,7 +135,6 @@ def get_curr_url(id):
         )
     return render_template(
         'urls_add.html',
-        message=message,
         id=id,
         name=name,
         created_at=created_at,
