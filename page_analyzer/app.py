@@ -11,15 +11,23 @@ from flask import (
     url_for,
 )
 import requests
-import psycopg2
-import psycopg2.extras
-from dotenv import load_dotenv
 import validators
 from urllib.parse import urlparse, urlunsplit
-from datetime import datetime
-from bs4 import BeautifulSoup
+
+from page_analyzer.model import (
+    add_url,
+    get_urls,
+    get_url_info,
+    get_url_by_id,
+    add_check,
+)
 
 
+app = Flask(__name__)
+app.config['SECRET_KEY'] = os.urandom(12)
+
+
+# maybe move to another module?
 def is_valid_url(url):
     valid_url = validators.url(url)
     valid_len_url = validators.length(url, max=255)
@@ -28,8 +36,9 @@ def is_valid_url(url):
     return False
 
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = os.urandom(12)
+def parse_url(data):
+    url_obj = urlparse(data['url'])
+    return urlunsplit((url_obj.scheme, url_obj.netloc, '', '', '',))
 
 
 @app.route("/")
@@ -37,45 +46,13 @@ def index():
     return render_template('index.html')
 
 
-load_dotenv()
-DATABASE_URL = os.getenv('DATABASE_URL')
-
-
-def without_null(dict):
-    for key in dict.keys():
-        dict[key] = '' if dict[key] is None else dict[key]
-    return dict
-
-
 # url add
 @app.post("/urls")
 def url():
-    message = ('Страница успешно добавлена', 'success')
     data = request.form.to_dict()
-    url_obj = urlparse(data['url'])
-    cleaned_url = urlunsplit((url_obj.scheme, url_obj.netloc, '', '', '',))
-    if is_valid_url(cleaned_url):
-        conn = psycopg2.connect(DATABASE_URL)
-        date_time = datetime.now().strftime("%Y-%m-%d")
-        with conn.cursor() as db:
-            try:
-                db.execute(
-                    'INSERT INTO urls (name, created_at) VALUES (%s, %s)',
-                    (cleaned_url, date_time)
-                )
-                conn.commit()
-            except psycopg2.errors.UniqueViolation:
-                message = ('Страница уже существует', 'info')
-                conn.rollback()
-
-        with conn.cursor() as data:
-            data.execute(
-                'SELECT id, name, created_at FROM urls WHERE name=%s',
-                (cleaned_url,)
-            )
-            curr_url = data.fetchall()[0]
-            id = curr_url[0]
-        conn.close()
+    parsed_url = parse_url(data)
+    if is_valid_url(parsed_url):
+        id, message = add_url(parsed_url)
         flash(*message)
         resp = redirect(url_for('get_curr_url', id=id), code=302)
         resp.headers['X-ID'] = id
@@ -87,72 +64,33 @@ def url():
 # list urls to "/urls"
 @app.get('/urls')
 def urls_get():
-    conn = psycopg2.connect(DATABASE_URL)
-    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
-        query = '''
-        SELECT urls.id, urls.name, MAX(url_checks.created_at) as last_check,
-               url_checks.status_code
-               FROM urls LEFT JOIN url_checks ON urls.id = url_checks.url_id
-               GROUP BY urls.id, url_checks.status_code
-               ORDER BY urls.created_at DESC
-        '''
-        data.execute(query)
-        answer = data.fetchall()
-        urls = [dict(row) for row in answer]
-        urls_without_none = list(map(without_null, urls))
-
+    urls = get_urls()
     return render_template(
         'urls.html',
-        urls=urls_without_none,
+        urls=urls,
     )
 
 
 @app.route("/urls/<id>")
 def get_curr_url(id):
-    conn = psycopg2.connect(DATABASE_URL)
-    with conn.cursor() as data:
-        data.execute(
-            'SELECT id, name, created_at FROM urls WHERE id=%s',
-            (str(id),)
-        )
-        curr_url = data.fetchone()
-        name = curr_url[1]
-        created_at = curr_url[2]
+    (
+        id, name, created_at, urls
+    ) = get_url_info(id)
 
-    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
-        data.execute(
-            'SELECT '
-            'id, url_id, created_at, status_code, h1, title, description '
-            'FROM url_checks WHERE url_id=%s',
-            (str(id),)
-        )
-        answer = data.fetchall()
-        url_checks = [dict(row) for row in answer]
-        urls_without_null = list(map(without_null, url_checks))
-        # sort checks by 'id' in descending order
-        urls_without_null.sort(
-            reverse=True, key=lambda url: url.get('id')
-        )
     return render_template(
         'urls_add.html',
         id=id,
         name=name,
         created_at=created_at,
-        url_checks=urls_without_null,
+        url_checks=urls,
     )
 
 
 # make check
 @app.post("/urls/<id>/checks")
 def make_check(id):
-    conn = psycopg2.connect(DATABASE_URL)
-    with conn.cursor() as data:
-        data.execute(
-            'SELECT id, name, created_at FROM urls WHERE id=%s',
-            (str(id),)
-        )
-        curr_url = data.fetchone()
-        name = curr_url[1]
+    curr_url = get_url_by_id(id)
+    name = curr_url[0]
     # get response
     try:
         response = requests.get(name, verify=False)
@@ -168,23 +106,8 @@ def make_check(id):
         resp.headers['X-ID'] = id
         return resp
 
-    date_time = datetime.now().strftime("%Y-%m-%d")
-    soup = BeautifulSoup(response.text, 'html.parser')
-    h1 = soup.h1.string if soup.h1 else ''
-    title = soup.title.string if soup.title else ''
-    description = soup.find("meta", {"name": "description"})
-    content = description['content'] if description else ''
-
-    with conn.cursor() as db:
-        db.execute(
-            'INSERT INTO url_checks'
-            '(url_id, created_at, status_code, h1, title, description) VALUES '
-            '(%s, %s, %s, %s, %s, %s)',
-            (str(id), date_time, str(response.status_code), h1, title, content)
-        )
-        conn.commit()
-
-        flash('Страница успешно проверена', category='success')
-        resp = make_response(redirect(url_for('get_curr_url', id=id)))
-        resp.headers['X-ID'] = id
-        return resp
+    message = add_check(id, response)
+    flash(*message)
+    resp = make_response(redirect(url_for('get_curr_url', id=id)))
+    resp.headers['X-ID'] = id
+    return resp
