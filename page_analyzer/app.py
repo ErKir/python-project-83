@@ -11,6 +11,7 @@ from flask import (
     url_for,
 )
 import requests
+from dotenv import load_dotenv
 import validators
 from urllib.parse import urlparse, urlunsplit
 
@@ -22,9 +23,10 @@ from page_analyzer.model import (
     add_check,
 )
 
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.urandom(12)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 
 # maybe move to another module?
