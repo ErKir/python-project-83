@@ -3,3 +3,4 @@
 .vscode
 dist
 .env
+templates/__pycache__
