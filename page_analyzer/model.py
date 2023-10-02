@@ -83,8 +83,6 @@ def get_url_by_id(id):
 
 def get_url_info(id):
     curr_url = get_url_by_id(id)
-    name = curr_url[0]
-    created_at = curr_url[1]
 
     conn = connect()
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
@@ -101,7 +99,7 @@ def get_url_info(id):
         urls_without_null.sort(
             reverse=True, key=lambda url: url.get('id')
         )
-    return (id, name, created_at, urls_without_null)
+    return (id, curr_url, urls_without_null)
 
 
 # make check

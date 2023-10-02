@@ -66,14 +66,13 @@ def get_urls():
 @app.route("/urls/<id>")
 def get_curr_url(id):
     (
-        id, name, created_at, urls
+        id, curr_url, urls
     ) = get_url_info(id)
 
     return render_template(
         'urls_add.html',
         id=id,
-        name=name,
-        created_at=created_at,
+        curr_url=curr_url,
         url_checks=urls,
     )
 
