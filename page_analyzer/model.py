@@ -21,30 +21,35 @@ def connect():
     return psycopg2.connect(DATABASE_URL)
 
 
+def find_url_id(url):
+    conn = connect()
+    with conn.cursor() as data:
+        data.execute(
+            'SELECT id FROM urls WHERE name=%s',
+            (url,)
+        )
+        return data.fetchone()
+
+
 # url add
 def add_url(url):
     message = ('Страница успешно добавлена', 'success')
     conn = connect()
     date_time = datetime.now().strftime("%Y-%m-%d")
-    with conn.cursor() as db:
-        try:
-            db.execute(
+    id = find_url_id(url)
+    print('id = ', id)
+    if id:
+        message = ('Страница уже существует', 'info')
+    else:
+        with conn.cursor() as data:
+            data.execute(
                 'INSERT INTO urls (name, created_at) VALUES (%s, %s)',
                 (url, date_time)
             )
             conn.commit()
-        except psycopg2.errors.UniqueViolation:
-            message = ('Страница уже существует', 'info')
-            conn.rollback()
-
-    with conn.cursor() as data:
-        data.execute(
-            'SELECT id, name, created_at FROM urls WHERE name=%s',
-            (url,)
-        )
-        id = data.fetchone()[0]
-        conn.close()
-    return (id, message)
+            id = find_url_id(url)
+    conn.close()
+    return (id[0], message)
 
 
 # list urls to "/urls"
