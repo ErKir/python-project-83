@@ -2,8 +2,11 @@ import validators
 
 
 def is_valid_url(url):
+    errors = []
     valid_url = validators.url(url)
     valid_len_url = validators.length(url, max=255)
-    if (valid_len_url and valid_url):
-        return True
-    return False
+    if isinstance(valid_url, validators.ValidationFailure):
+        errors.append('Invalid URL!')
+    if isinstance(valid_len_url, validators.ValidationFailure):
+        errors.append('Maximum address length exceeded!')
+    return errors

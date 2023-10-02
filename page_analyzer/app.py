@@ -29,9 +29,6 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 
-# maybe move to another module?
-
-
 @app.route("/")
 def index():
     return render_template('index.html')
@@ -42,14 +39,18 @@ def index():
 def url():
     data = request.form.to_dict()
     parsed_url = parse_url(data)
-    if is_valid_url(parsed_url):
-        id, message = add_url(parsed_url)
-        flash(*message)
-        resp = redirect(url_for('get_curr_url', id=id), code=302)
-        resp.headers['X-ID'] = id
-        return resp
-    flash('Некорректный URL', 'danger')
-    return render_template('urls.html'), 422
+    validation_errors = is_valid_url(parsed_url)
+    if validation_errors:
+        flash('Некорректный URL', 'danger')
+        return render_template(
+            'urls.html',
+            errors=validation_errors
+        ), 422
+    id, message = add_url(parsed_url)
+    flash(*message)
+    resp = redirect(url_for('get_curr_url', id=id), code=302)
+    resp.headers['X-ID'] = id
+    return resp
 
 
 # list urls to "/urls"
