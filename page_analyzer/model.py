@@ -17,10 +17,14 @@ def without_null(dict):
     return dict
 
 
+def connect():
+    return psycopg2.connect(DATABASE_URL)
+
+
 # url add
 def add_url(url):
     message = ('Страница успешно добавлена', 'success')
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = connect()
     date_time = datetime.now().strftime("%Y-%m-%d")
     with conn.cursor() as db:
         try:
@@ -45,7 +49,7 @@ def add_url(url):
 
 # list urls to "/urls"
 def get_urls():
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = connect()
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
         query = '''
         SELECT urls.id, urls.name, MAX(url_checks.created_at) as last_check,
@@ -61,7 +65,7 @@ def get_urls():
 
 
 def get_url_by_id(id):
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = connect()
     with conn.cursor() as data:
         data.execute(
             'SELECT name, created_at FROM urls WHERE id=%s',
@@ -77,7 +81,7 @@ def get_url_info(id):
     name = curr_url[0]
     created_at = curr_url[1]
 
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = connect()
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
         data.execute(
             'SELECT '
@@ -97,7 +101,7 @@ def get_url_info(id):
 
 # make check
 def add_check(id, response):
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = connect()
     date_time = datetime.now().strftime("%Y-%m-%d")
     soup = BeautifulSoup(response.text, 'html.parser')
     h1 = soup.h1.string if soup.h1 else ''
