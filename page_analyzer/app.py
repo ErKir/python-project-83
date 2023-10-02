@@ -12,7 +12,6 @@ from flask import (
 )
 import requests
 from dotenv import load_dotenv
-import validators
 from urllib.parse import urlparse, urlunsplit
 
 from page_analyzer.model import (
@@ -30,12 +29,6 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 
 # maybe move to another module?
-def is_valid_url(url):
-    valid_url = validators.url(url)
-    valid_len_url = validators.length(url, max=255)
-    if (valid_len_url and valid_url):
-        return True
-    return False
 
 
 def parse_url(data):
