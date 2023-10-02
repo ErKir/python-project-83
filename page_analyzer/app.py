@@ -17,7 +17,7 @@ from urllib.parse import urlparse, urlunsplit
 
 from page_analyzer.model import (
     add_url,
-    get_urls,
+    get_urls as get_urls_from_db,
     get_url_info,
     get_url_by_id,
     add_check,
@@ -65,8 +65,8 @@ def url():
 
 # list urls to "/urls"
 @app.get('/urls')
-def urls_get():
-    urls = get_urls()
+def get_urls():
+    urls = get_urls_from_db()
     return render_template(
         'urls.html',
         urls=urls,
