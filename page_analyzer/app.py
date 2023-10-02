@@ -13,6 +13,7 @@ from flask import (
 import requests
 from dotenv import load_dotenv
 from urllib.parse import urlparse, urlunsplit
+from page_analyzer.scripts.validator import is_valid_url
 
 from page_analyzer.model import (
     add_url,
