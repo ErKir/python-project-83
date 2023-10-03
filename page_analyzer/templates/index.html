@@ -31,7 +31,9 @@
                     <h1 class="display-3">Анализатор страниц</h1>
                     <p class="lead">Бесплатно проверяйте сайты на SEO-пригодность</p>
                     <form action="/urls " method="post" class="d-flex justify-content-center" required="">
-                        {% include "form.html" %}
+                        {% block content %}
+                            {% include "form.html" %}
+                        {% endblock %}
                     </form>
                 </div>
             </div>
