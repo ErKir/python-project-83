@@ -78,20 +78,21 @@ def get_curr_url(id):
 def make_check(id):
     curr_url = get_url_by_id(id)
     name = curr_url[0]
+    success_status_codes = range(200, 300)
+
     try:
         response = requests.get(name, verify=False)
     except requests.exceptions.RequestException:
-        flash('Произошла ошибка при проверке', category='danger')
-        resp = make_response(redirect(url_for('get_curr_url', id=id)))
-        resp.headers['X-ID'] = id
-        return resp
-    success_status_codes = range(200, 300)
-    if response.status_code not in success_status_codes:
-        flash('Произошла ошибка при проверке', category='danger')
-        resp = make_response(redirect(url_for('get_curr_url', id=id)))
-        return resp
+        message = ('Произошла ошибка при проверке', 'danger')
 
-    message = add_check(id, response)
+    if response.status_code not in success_status_codes:
+        message = ('Произошла ошибка при проверке', 'danger')
+
+    add_check_is_successful = add_check(id, response)
+    if add_check_is_successful:
+        message = ('Страница успешно проверена', 'success')
+    else:
+        message = ('Произошла ошибка записи проверки', 'danger')
     flash(*message)
     resp = make_response(redirect(url_for('get_curr_url', id=id)))
     return resp

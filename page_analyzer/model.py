@@ -117,5 +117,4 @@ def add_check(id, response):
             (str(id), date_time, str(response.status_code), h1, title, content)
         )
         conn.commit()
-        message = ('Страница успешно проверена', 'success')
-        return message
+        return True
