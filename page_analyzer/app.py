@@ -49,7 +49,6 @@ def url():
     id, message = add_url(parsed_url)
     flash(*message)
     resp = redirect(url_for('get_curr_url', id=id), code=302)
-    resp.headers['X-ID'] = id
     return resp
 
 
@@ -94,13 +93,11 @@ def make_check(id):
     if response.status_code not in success_status_codes:
         flash('Произошла ошибка при проверке', category='danger')
         resp = make_response(redirect(url_for('get_curr_url', id=id)))
-        resp.headers['X-ID'] = id
         return resp
 
     message = add_check(id, response)
     flash(*message)
     resp = make_response(redirect(url_for('get_curr_url', id=id)))
-    resp.headers['X-ID'] = id
     return resp
 
 
