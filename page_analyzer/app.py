@@ -34,7 +34,6 @@ def index():
     return render_template('index.html')
 
 
-# url add
 @app.post("/urls")
 def url():
     data = request.form.to_dict()
@@ -52,7 +51,6 @@ def url():
     return resp
 
 
-# list urls to "/urls"
 @app.get('/urls')
 def get_urls():
     urls = get_urls_from_db()
@@ -76,12 +74,10 @@ def get_curr_url(id):
     )
 
 
-# make check
 @app.post("/urls/<id>/checks")
 def make_check(id):
     curr_url = get_url_by_id(id)
     name = curr_url[0]
-    # get response
     try:
         response = requests.get(name, verify=False)
     except requests.exceptions.RequestException:

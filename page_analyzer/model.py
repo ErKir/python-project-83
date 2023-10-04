@@ -31,7 +31,6 @@ def find_url_id(url):
         return data.fetchone()
 
 
-# url add
 def add_url(url):
     message = ('Страница успешно добавлена', 'success')
     conn = connect()
@@ -52,7 +51,6 @@ def add_url(url):
     return (id[0], message)
 
 
-# list urls to "/urls"
 def get_urls():
     conn = connect()
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
@@ -102,7 +100,6 @@ def get_url_info(id):
     return (id, curr_url, urls_without_null)
 
 
-# make check
 def add_check(id, response):
     conn = connect()
     date_time = datetime.now().strftime("%Y-%m-%d")
