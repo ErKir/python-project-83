@@ -39,7 +39,6 @@ def url():
     data = request.form.to_dict()
     parsed_url = parse_url(data)
     validation_errors = is_valid_url(parsed_url)
-    print(validation_errors)
     if validation_errors:
         flash('Некорректный URL', 'danger')
         return render_template(

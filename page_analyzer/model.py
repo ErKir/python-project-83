@@ -51,20 +51,37 @@ def add_url(url):
     return (id[0], message)
 
 
-def get_urls():
+def get_all(table):
     conn = connect()
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
-        query = '''
-        SELECT urls.id, urls.name, MAX(url_checks.created_at) as last_check,
-               url_checks.status_code
-               FROM urls LEFT JOIN url_checks ON urls.id = url_checks.url_id
-               GROUP BY urls.id, url_checks.status_code
-               ORDER BY urls.created_at DESC
-        '''
-        data.execute(query)
+        data.execute(f'SELECT * FROM {table}')
         answer = data.fetchall()
-        urls = [dict(row) for row in answer]
-    return list(map(without_null, urls))
+        conn.close()
+    return [dict(row) for row in answer]
+
+
+def get_latest_check(url_id):
+    conn = connect()
+    with conn.cursor() as data:
+        data.execute('SELECT id, status_code, created_at'
+                     ' FROM url_checks WHERE url_id=%s'
+                     ' ORDER BY id DESC LIMIT 1',
+                     (str(url_id),))
+        return data.fetchone()
+
+
+def get_urls():
+    urls = get_all('urls')
+    result = []
+    for url in urls:
+        curr_info = {}
+        curr_info['id'] = url['id']
+        curr_info['name'] = url['name']
+        check = get_latest_check(url['id'])
+        curr_info['status_code'] = check[1]
+        curr_info['last_check'] = check[2]
+        result.append(curr_info)
+    return result
 
 
 def get_url_by_id(id):
@@ -81,7 +98,6 @@ def get_url_by_id(id):
 
 def get_url_info(id):
     curr_url = get_url_by_id(id)
-
     conn = connect()
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
         data.execute(
@@ -93,7 +109,6 @@ def get_url_info(id):
         answer = data.fetchall()
         url_checks = [dict(row) for row in answer]
         urls_without_null = list(map(without_null, url_checks))
-        # sort checks by 'id' in descending order
         urls_without_null.sort(
             reverse=True, key=lambda url: url.get('id')
         )
