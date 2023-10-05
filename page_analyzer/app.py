@@ -82,13 +82,14 @@ def make_check(id):
     try:
         response = requests.get(name, verify=False)
     except requests.exceptions.RequestException:
-        message = ('Произошла ошибка при проверке', 'danger')
-        flash(*message)
+        flash('Произошла ошибка при проверке', category='danger')
         resp = make_response(redirect(url_for('get_curr_url', id=id)))
         return resp
 
     if response.status_code not in success_status_codes:
-        message = ('Произошла ошибка при проверке', 'danger')
+        flash('Произошла ошибка при проверке', category='danger')
+        resp = make_response(redirect(url_for('get_curr_url', id=id)))
+        return resp
 
     add_check_is_successful = add_check(id, response)
     if add_check_is_successful:
