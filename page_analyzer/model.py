@@ -78,9 +78,12 @@ def get_urls():
         curr_info['id'] = url['id']
         curr_info['name'] = url['name']
         check = get_latest_check(url['id'])
-        curr_info['status_code'] = check[1]
-        curr_info['last_check'] = check[2]
-        result.append(curr_info)
+        if not check:
+            result.append(curr_info)
+        else:
+            curr_info['status_code'] = check[1]
+            curr_info['last_check'] = check[2]
+            result.append(curr_info)
     return result
 
 
