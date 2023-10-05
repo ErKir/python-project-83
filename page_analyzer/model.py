@@ -54,7 +54,7 @@ def add_url(url):
 def get_all(table):
     conn = connect()
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as data:
-        data.execute(f'SELECT * FROM {table}')
+        data.execute(f'SELECT * FROM {table} ORDER BY id DESC')
         answer = data.fetchall()
         conn.close()
     return [dict(row) for row in answer]
