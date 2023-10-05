@@ -36,7 +36,6 @@ def add_url(url):
     conn = connect()
     date_time = datetime.now().strftime("%Y-%m-%d")
     id = find_url_id(url)
-    print('id = ', id)
     if id:
         message = ('Страница уже существует', 'info')
     else:
