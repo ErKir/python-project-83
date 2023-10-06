@@ -32,22 +32,17 @@ def find_url_id(url):
 
 
 def add_url(url):
-    message = ('Страница успешно добавлена', 'success')
     conn = connect()
     date_time = datetime.now().strftime("%Y-%m-%d")
-    id = find_url_id(url)
-    if id:
-        message = ('Страница уже существует', 'info')
-    else:
-        with conn.cursor() as data:
-            data.execute(
-                'INSERT INTO urls (name, created_at) VALUES (%s, %s)',
-                (url, date_time)
-            )
-            conn.commit()
-            id = find_url_id(url)
+    with conn.cursor() as data:
+        data.execute(
+            'INSERT INTO urls (name, created_at) VALUES (%s, %s)',
+            (url, date_time)
+        )
+        conn.commit()
+        id = find_url_id(url)
     conn.close()
-    return (id[0], message)
+    return id[0]
 
 
 def get_all(table):

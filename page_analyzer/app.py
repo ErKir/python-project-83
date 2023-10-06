@@ -12,7 +12,7 @@ from flask import (
 )
 import requests
 from dotenv import load_dotenv
-from page_analyzer.utils import is_valid_url
+from page_analyzer.utils import validate
 from page_analyzer.utils import parse_url
 
 from page_analyzer.model import (
@@ -21,6 +21,7 @@ from page_analyzer.model import (
     get_url_info,
     get_url_by_id,
     add_check,
+    find_url_id,
 )
 
 load_dotenv()
@@ -38,13 +39,18 @@ def index():
 def url():
     data = request.form.to_dict()
     parsed_url = parse_url(data)
-    validation_errors = is_valid_url(parsed_url)
+    validation_errors = validate(parsed_url)
     if validation_errors:
         flash('Некорректный URL', 'danger')
         return render_template(
             'urls.html',
         ), 422
-    id, message = add_url(parsed_url)
+
+    if find_url_id(parsed_url):
+        message = ('Страница уже существует', 'info')
+    else:
+        id = add_url(parsed_url)
+        message = ('Страница успешно добавлена', 'success')
     flash(*message)
     resp = redirect(url_for('get_curr_url', id=id), code=302)
     return resp
