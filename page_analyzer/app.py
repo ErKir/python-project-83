@@ -22,12 +22,14 @@ from page_analyzer.model import (
     get_url_by_id,
     add_check,
     find_url_id,
+    connect,
 )
 
 load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+connection = connect()
 
 
 @app.route("/")
@@ -45,20 +47,20 @@ def url():
         return render_template(
             'urls.html',
         ), 422
-
-    if find_url_id(parsed_url):
-        message = ('Страница уже существует', 'info')
-    else:
-        id = add_url(parsed_url)
-        message = ('Страница успешно добавлена', 'success')
-    flash(*message)
-    resp = redirect(url_for('get_curr_url', id=id), code=302)
+    found_id = find_url_id(parsed_url, connection)
+    if found_id:
+        flash('Страница уже существует', 'info')
+        resp = redirect(url_for('get_curr_url', id=found_id[0]), code=302)
+        return resp
+    added_url_id = add_url(parsed_url, connection)
+    flash('Страница успешно добавлена', 'success')
+    resp = redirect(url_for('get_curr_url', id=added_url_id), code=302)
     return resp
 
 
 @app.get('/urls')
 def get_urls():
-    urls = get_urls_from_db()
+    urls = get_urls_from_db(connection)
     return render_template(
         'urls.html',
         urls=urls,
@@ -69,7 +71,7 @@ def get_urls():
 def get_curr_url(id):
     (
         id, curr_url, urls
-    ) = get_url_info(id)
+    ) = get_url_info(id, connection)
 
     return render_template(
         'urls_add.html',
@@ -81,7 +83,7 @@ def get_curr_url(id):
 
 @app.post("/urls/<id>/checks")
 def make_check(id):
-    curr_url = get_url_by_id(id)
+    curr_url = get_url_by_id(id, connection)
     name = curr_url[0]
     success_status_codes = range(200, 300)
 
@@ -97,7 +99,7 @@ def make_check(id):
         resp = make_response(redirect(url_for('get_curr_url', id=id)))
         return resp
 
-    add_check_is_successful = add_check(id, response)
+    add_check_is_successful = add_check(id, response, connection)
     if add_check_is_successful:
         message = ('Страница успешно проверена', 'success')
     else:
