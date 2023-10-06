@@ -12,8 +12,8 @@ from flask import (
 )
 import requests
 from dotenv import load_dotenv
-from page_analyzer.scripts.validator import is_valid_url
-from page_analyzer.scripts.parser import parse_url
+from page_analyzer.utils import is_valid_url
+from page_analyzer.utils import parse_url
 
 from page_analyzer.model import (
     add_url,
