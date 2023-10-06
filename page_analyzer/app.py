@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from page_analyzer.utils import validate
 from page_analyzer.utils import parse_url
 
-from page_analyzer.model import (
+from page_analyzer.db import (
     add_url,
     get_urls as get_urls_from_db,
     get_url_info,
