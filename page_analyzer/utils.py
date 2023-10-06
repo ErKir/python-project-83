@@ -7,7 +7,7 @@ def parse_url(data):
     return urlunsplit((url_obj.scheme, url_obj.netloc, '', '', '',))
 
 
-def is_valid_url(url):
+def validate(url):
     errors = []
     valid_url = validators.url(url)
     valid_len_url = validators.length(url, max=255)
