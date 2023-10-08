@@ -29,7 +29,6 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-connection = connect()
 
 
 @app.route("/")
@@ -39,6 +38,7 @@ def index():
 
 @app.post("/urls")
 def url():
+    connection = connect()
     data = request.form.to_dict()
     parsed_url = parse_url(data)
     validation_errors = validate(parsed_url)
@@ -60,6 +60,7 @@ def url():
 
 @app.get('/urls')
 def get_urls():
+    connection = connect()
     urls = get_urls_from_db(connection)
     return render_template(
         'urls.html',
@@ -69,6 +70,7 @@ def get_urls():
 
 @app.route("/urls/<id>")
 def get_curr_url(id):
+    connection = connect()
     (
         id, curr_url, urls
     ) = get_url_info(id, connection)
@@ -83,6 +85,7 @@ def get_curr_url(id):
 
 @app.post("/urls/<id>/checks")
 def make_check(id):
+    connection = connect()
     curr_url = get_url_by_id(id, connection)
     name = curr_url[0]
     success_status_codes = range(200, 300)

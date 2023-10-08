@@ -39,6 +39,7 @@ def add_url(url, connection):
         )
         connection.commit()
         id = find_url_id(url, connection)[0]
+    connection.close()
     return id
 
 
@@ -74,6 +75,7 @@ def get_urls(connection):
             curr_info['status_code'] = check[1]
             curr_info['last_check'] = check[2]
             result.append(curr_info)
+    connection.close()
     return result
 
 
@@ -104,6 +106,7 @@ def get_url_info(id, connection):
         urls_without_null.sort(
             reverse=True, key=lambda url: url.get('id')
         )
+    connection.close()
     return (id, curr_url, urls_without_null)
 
 
@@ -123,4 +126,5 @@ def add_check(id, response, connection):
             (str(id), date_time, str(response.status_code), h1, title, content)
         )
         connection.commit()
+        connection.close()
         return True
